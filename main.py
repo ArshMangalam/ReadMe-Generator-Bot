@@ -6,6 +6,8 @@ from typing import Optional
 from github_utils import extract_repo_info
 from gemini_utils import generate_readme_from_repo
 import asyncio
+from flask import Flask
+import threading
 
 # Load environment variables
 load_dotenv()
@@ -337,8 +339,23 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data == "download":
         await download_readme(update, context)
 
+app_flask = Flask(__name__)
+
+@app_flask.route('/')
+def home():
+    return "✅ Bot is alive!", 200
+
+def run_web():
+    app_flask.run(host="0.0.0.0", port=8080)
+
+def keep_alive():
+    t = threading.Thread(target=run_web)
+    t.start()
+
 # Main function
 def main():
+    keep_alive()  # 👈 Add this line to start the web server
+    
     app = ApplicationBuilder().token(TOKEN).build()
     
     conv_handler = ConversationHandler(
